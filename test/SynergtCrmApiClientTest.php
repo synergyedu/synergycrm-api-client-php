@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 use SynergyCrm\ApiClient;
 use WoohooLabs\Yang\JsonApi\Request\ResourceObject;
 use WoohooLabs\Yang\JsonApi\Request\RelationshipInterface;
-
+require_once __DIR__ . '/../vendor/autoload.php';
 
 class SynergyCrmApiClientTest extends TestCase
 {

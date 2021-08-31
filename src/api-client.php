@@ -1,6 +1,6 @@
 <?php
 namespace SynergyCrm;
-require_once __DIR__ . '/../vendor/autoload.php';
+
 use GuzzleHttp\Psr7\Request;
 use parallel\Sync\Error;
 use WoohooLabs\Yang\JsonApi\Request\JsonApiRequestBuilder;
