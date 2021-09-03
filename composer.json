@@ -9,7 +9,8 @@
     ],
     "require": {
         "php-http/guzzle6-adapter": "^2.0",
-        "woohoolabs/yang": "^2.3"
+        "woohoolabs/yang": "^2.3",
+        "fzaninotto/faker": "^1.9"
     },
     "autoload": {
         "classmap": [

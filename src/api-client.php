@@ -29,7 +29,7 @@ class ApiClient
         return 'Hello World, Composer!';
     }
 
-    public  function getRequest($method)
+    public  function getRequest($method,$filter='')
     {
         // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
         $requestBuilder = $this->buildRequest();
@@ -40,6 +40,7 @@ class ApiClient
             ->setUri($this->url.$method)
             ->setHeader('Authorization', 'Bearer ' . $this->token);
 
+        if ($filter != '') $requestBuilder->setJsonApiFilter($filter);
         return $requestBuilder->getRequest();
     }
 
@@ -79,8 +80,14 @@ class ApiClient
     public function getCompanies()
     {
         $request = $this->getRequest("companies");
+        $response = $this->client->sendRequest($request);
+        return $this->processedResponse($response);
+    }
 
-        // Send the request syncronously to retrieve the response
+
+    public function getContacts($filter='')
+    {
+        $request = $this->getRequest("contacts",$filter);
         $response = $this->client->sendRequest($request);
         return $this->processedResponse($response);
     }
@@ -92,34 +99,6 @@ class ApiClient
     public function processedResponse(\WoohooLabs\Yang\JsonApi\Response\JsonApiResponse $response)
     {
         return $response;
-// Checks if the response doesn't contain any errors
-        if ($isSuccessful = $response->isSuccessful()) {
-
-            // Checks if the response doesn't contain any errors, and has the status codes listed below
-            $isSuccessful = $response->isSuccessful([200, 202]);
-
-            // The same as the isSuccessful() method, but also ensures the response contains a document
-            $isSuccessfulDocument = $response->isSuccessfulDocument();
-
-            // Checks if the response contains a JSON:API document
-            $hasDocument = $response->hasDocument();
-
-            if ($hasDocument) { // Retrieves and deserializes the JSON:API document in the response body
-                $document = $response->document();
-
-                # var_dump($document);
-                return $document;
-            } else {
-
-                var_dump( $response );
-                return $response;
-            }
-
-        } else {
-            var_dump($response);
-            return $response;
-
-        }
     }
 
     /**
