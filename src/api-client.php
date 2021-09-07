@@ -45,25 +45,12 @@ class ApiClient
     }
 
     public  function sendPostRequest($api_method, $body = '') {
-        $request = $this->buildPostRequest($api_method, $body);
-        $response = $this->client->sendRequest($request);
-        return $this->processedResponse($response);
+        return $this->sendAnyRequest("POST", $api_method, $body);
     }
 
     public  function buildPostRequest($api_method, $body = '')
     {
-        $requestBuilder = $this->buildRequest();
-
-        // Setup the request with general properties
-        $requestBuilder
-            ->setMethod("POST")
-            ->setUri($this->url.$api_method)
-            ->setHeader('Authorization', 'Bearer ' . $this->token)
-            ->setJsonApiBody( // string, array or as a ResourceObject instance
-                $body
-            );
-
-        return $requestBuilder->getRequest();
+        return $this->buildAnyRequest("POST", $api_method, $body);
     }
 
     public  function  createContact($data)
@@ -71,6 +58,10 @@ class ApiClient
         return $this->sendPostRequest("contacts", $data);
     }
 
+    public  function  updateContact($data)
+    {
+        return $this->sendAnyRequest("PATCH", "contacts", $data);
+    }
 
     public  function createDeal($data)
     {
@@ -104,7 +95,7 @@ class ApiClient
     /**
      * @return JsonApiRequestBuilder
      */
-    public function buildRequest($method='GET'): JsonApiRequestBuilder
+    public function buildRequest($method='GET')
     {
 // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
         $request = new Request($method, '');
@@ -112,5 +103,40 @@ class ApiClient
         // Instantiate the request builder
         $requestBuilder = new JsonApiRequestBuilder($request);
         return $requestBuilder;
+    }
+
+    /**
+     * @param string $http_method
+     * @param $api_method
+     * @param $body
+     * @return \Psr\Http\Message\RequestInterface
+     */
+    public function buildAnyRequest(string $http_method, $api_method, $body)
+    {
+        $requestBuilder = $this->buildRequest();
+
+        // Setup the request with general properties
+        $requestBuilder
+            ->setMethod($http_method)
+            ->setUri($this->url . $api_method)
+            ->setHeader('Authorization', 'Bearer ' . $this->token)
+            ->setJsonApiBody( // string, array or as a ResourceObject instance
+                $body
+            );
+
+        return $requestBuilder->getRequest();
+    }
+
+    /**
+     * @param string $http_method
+     * @param $api_method
+     * @param $body
+     * @return \WoohooLabs\Yang\JsonApi\Response\JsonApiResponse|\WoohooLabs\Yang\JsonApi\Schema\Document
+     */
+    public function sendAnyRequest($http_method, $api_method, $body)
+    {
+        $request = $this->buildAnyRequest($http_method, $api_method, $body);
+        $response = $this->client->sendRequest($request);
+        return $this->processedResponse($response);
     }
 }

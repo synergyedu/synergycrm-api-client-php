@@ -21,14 +21,14 @@ class SynergyCrmApiClientTest extends TestCase
             'e4b9ec90ee3e2ff81240129265bc7cfd640bfc51268bc9d5a545af8dde937942');
         self::$faker = Faker\Factory::create();
 
-        self::$email = self::$faker->email; #  uniqid().'@example.com';
+
         #self::$email = uniqid().'@example.com';
         # self::$email = '123carmella.zemlak@morar.biz'; # self::$faker->email(); #  uniqid().'@example.com';
 
         # $this->assertInstanceOf( ApiClient::class, self::$client );
     }
 
-    public function testCanGetCompanies(): void
+    public function testCanGetCompanies()
     {
         $companies = self::$client->getCompanies();
         # var_dump( $companies );
@@ -38,8 +38,9 @@ class SynergyCrmApiClientTest extends TestCase
     }
 
 
-    public function testCanCreateContact(): void
+    public function testCanCreateContact()
     {
+        self::$email = self::$faker->email; #  uniqid().'@example.com';
         $ro = new ResourceObject("contacts",'');
         $ro->setAttributes( array(
                 "first-name" => self::$faker->firstName(),
@@ -53,15 +54,27 @@ class SynergyCrmApiClientTest extends TestCase
         # $this->assertIsArray(  $companies->includedResources() );
     }
 
-    public function testCanGetContactsWithFilter(): void
+    public function testCanGetContactsWithFilter()
     {
-        $companies = self::$client->getContacts(array('email' => self::$email));
-        $this->assertTrue(  $companies->hasDocument() );
-        $this->assertTrue(  $companies->document()->hasAnyPrimaryResources() );
-        $this->assertIsArray(  $companies->document()->includedResources() );
+        if (self::$email == '') self::$email = '123carmella.zemlak@morar.biz';
+        $response = self::$client->getContacts(array('email' => self::$email));
+        # $this->assertTrue(  $response->hasDocument() );
+        # $this->assertTrue(  $response->document()->hasAnyPrimaryResources() );
+        $primaryResources = $response->document()->primaryResources();
+        $this->assertIsArray(  $primaryResource[0] );
+
+        $this->assertTrue( isset($response['customers']) );
+        if ($response && $response->isSuccessful() && isset($response['customers'])) {
+            $customers = $response['customers'];
+
+            if ($customers) {
+                $customer = end($customers);
+            }
+        }
+
     }
 
-    public  function  testCanCreateDeal(): void
+    public  function  testCanCreateDeal()
     {
         $ro = new ResourceObject("deals", '');
         $ro->setAttributes( array(
@@ -78,7 +91,7 @@ class SynergyCrmApiClientTest extends TestCase
     }
 
 
-    public  function testCanPost(): void
+    public  function testCanPost()
     {
         $deal = self::$client->sendPostRequest("deals", '{
   "data": {
