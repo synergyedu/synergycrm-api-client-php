@@ -9,6 +9,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 class SynergyCrmApiClientTest extends TestCase
 {
     protected static $client = '';
+    protected static $createdContactId = 0;
     protected static $email = '';
     protected static $faker = '';
 
@@ -43,14 +44,45 @@ class SynergyCrmApiClientTest extends TestCase
         self::$email = self::$faker->email; #  uniqid().'@example.com';
         $ro = new ResourceObject("contacts",'');
         $ro->setAttributes( array(
-                "first-name" => self::$faker->firstName(),
-                "last-name" => self::$faker->lastName(),
-                'email' => self::$email
-                ));
+            "first-name" => self::$faker->firstName(),
+            "last-name" => self::$faker->lastName(),
+            'email' => self::$email
+        ));
 
         $contact = self::$client->createContact($ro);
         $this->assertTrue(  $contact->hasDocument() );
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
+        self::$createdContactId = $contact->document()->primaryResource()->id();
+        # $this->assertIsArray(  $companies->includedResources() );
+    }
+
+    public function testCanUpdateContact()
+    {
+        self::$email = self::$faker->email; #  uniqid().'@example.com';
+        self::$createdContactId |= 28185;
+        $firstName = "Updated" . self::$faker->firstName;
+        $ro = new ResourceObject("contacts",self::$createdContactId);
+        $ro->setAttributes( array(
+            "first-name" => $firstName,
+        ));
+
+
+        $ro = '{
+        "data":{
+           "type":"contacts",
+           "id": "28185",
+           "attributes": {
+             "first-name": "'.$firstName.'"
+            }
+          }
+        }';
+
+        $contact = self::$client->updateContact($ro);
+        $this->assertTrue(  $contact->isSuccessful() );
+
+        $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
+        $this->assertEquals($firstName,
+            self::$createdContactId = $contact->document()->primaryResource()->attribute("first-name"));
         # $this->assertIsArray(  $companies->includedResources() );
     }
 
@@ -59,17 +91,15 @@ class SynergyCrmApiClientTest extends TestCase
         if (self::$email == '') self::$email = '123carmella.zemlak@morar.biz';
         $response = self::$client->getContacts(array('email' => self::$email));
         # $this->assertTrue(  $response->hasDocument() );
-        # $this->assertTrue(  $response->document()->hasAnyPrimaryResources() );
-        $primaryResources = $response->document()->primaryResources();
-        $this->assertIsArray(  $primaryResource[0] );
+        #$this->assertTrue(  $response->document()->hasPrimaryResources() );
+        $document = $response->document()->primaryResources();
+        $this->assertIsArray(  $document );
+        #$document = $response->document();
+        $this->assertTrue( isset($document[0]) );
 
-        $this->assertTrue( isset($response['customers']) );
-        if ($response && $response->isSuccessful() && isset($response['customers'])) {
-            $customers = $response['customers'];
-
-            if ($customers) {
-                $customer = end($customers);
-            }
+        if ($response && $response->isSuccessful() && isset($document[0])) {
+            $customer = $document[0];
+            $this->assertEquals(self::$email, $customer->attribute('email') );
         }
 
     }

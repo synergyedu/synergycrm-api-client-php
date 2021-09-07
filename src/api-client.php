@@ -2,6 +2,7 @@
 namespace SynergyCrm;
 
 use GuzzleHttp\Psr7\Request;
+use mysql_xdevapi\Exception;
 use parallel\Sync\Error;
 use WoohooLabs\Yang\JsonApi\Request\JsonApiRequestBuilder;
 use WoohooLabs\Yang\JsonApi\Client\JsonApiClient;
@@ -38,6 +39,7 @@ class ApiClient
         $requestBuilder
             ->setMethod("GET")
             ->setUri($this->url.$method)
+            ->setHeader("Content-Type", "application/vnd.api+json")
             ->setHeader('Authorization', 'Bearer ' . $this->token);
 
         if ($filter != '') $requestBuilder->setJsonApiFilter($filter);
@@ -115,10 +117,20 @@ class ApiClient
     {
         $requestBuilder = $this->buildRequest();
 
+        $id = '';
+        if (is_string($body)) {
+            $decoded = json_decode($body,true);
+            if (is_array($decoded) && array_key_exists('id',$decoded['data'])) {
+                $id = "/" . $decoded['data']['id'] . "/";
+            }
+        } elseif (is_a($body,"ResourceObject")) {
+            $id = "/" . $body->id() . "/";
+        }
+
         // Setup the request with general properties
         $requestBuilder
             ->setMethod($http_method)
-            ->setUri($this->url . $api_method)
+            ->setUri($this->url . $api_method . $id)
             ->setHeader('Authorization', 'Bearer ' . $this->token)
             ->setJsonApiBody( // string, array or as a ResourceObject instance
                 $body
