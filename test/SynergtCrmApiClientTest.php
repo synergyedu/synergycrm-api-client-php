@@ -22,6 +22,7 @@ class SynergyCrmApiClientTest extends TestCase
             'e4b9ec90ee3e2ff81240129265bc7cfd640bfc51268bc9d5a545af8dde937942');
         self::$faker = Faker\Factory::create();
 
+        self::$email = '123carmella.zemlak@morar.biz';
 
         #self::$email = uniqid().'@example.com';
         # self::$email = '123carmella.zemlak@morar.biz'; # self::$faker->email(); #  uniqid().'@example.com';
@@ -42,14 +43,14 @@ class SynergyCrmApiClientTest extends TestCase
     public function testCanCreateContact()
     {
         self::$email = self::$faker->email; #  uniqid().'@example.com';
-        $ro = new ResourceObject("contacts",'');
-        $ro->setAttributes( array(
+        $contactObject = new ResourceObject("contacts",'');
+        $contactObject->setAttributes( array(
             "first-name" => self::$faker->firstName(),
             "last-name" => self::$faker->lastName(),
             'email' => self::$email
         ));
 
-        $contact = self::$client->createContact($ro);
+        $contact = self::$client->createContact($contactObject);
         $this->assertTrue(  $contact->hasDocument() );
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
         self::$createdContactId = $contact->document()->primaryResource()->id();
@@ -61,22 +62,23 @@ class SynergyCrmApiClientTest extends TestCase
         self::$email = self::$faker->email; #  uniqid().'@example.com';
         self::$createdContactId |= 28185;
         $firstName = "Updated" . self::$faker->firstName;
-        $ro = new ResourceObject("contacts",self::$createdContactId);
-        $ro->setAttributes( array(
-            "first-name" => $firstName,
-        ));
+        if (true) {
+            $ro = new ResourceObject("contacts", self::$createdContactId);
+            $ro->setAttributes(array(
+                "first-name" => $firstName,
+            ));
+        } else {
 
-
-        $ro = '{
-        "data":{
-           "type":"contacts",
-           "id": "28185",
-           "attributes": {
-             "first-name": "'.$firstName.'"
-            }
-          }
-        }';
-
+            $ro = '{
+            "data":{
+               "type":"contacts",
+               "id": "'.self::$createdContactId.'",
+               "attributes": {
+                 "first-name": "' . $firstName . '"
+                }
+              }
+            }';
+        }
         $contact = self::$client->updateContact($ro);
         $this->assertTrue(  $contact->isSuccessful() );
 
@@ -88,13 +90,11 @@ class SynergyCrmApiClientTest extends TestCase
 
     public function testCanGetContactsWithFilter()
     {
-        if (self::$email == '') self::$email = '123carmella.zemlak@morar.biz';
+
+        echo "using email: ".self::$email;
         $response = self::$client->getContacts(array('email' => self::$email));
-        # $this->assertTrue(  $response->hasDocument() );
-        #$this->assertTrue(  $response->document()->hasPrimaryResources() );
         $document = $response->document()->primaryResources();
         $this->assertIsArray(  $document );
-        #$document = $response->document();
         $this->assertTrue( isset($document[0]) );
 
         if ($response && $response->isSuccessful() && isset($document[0])) {

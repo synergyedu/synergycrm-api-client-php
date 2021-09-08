@@ -7,6 +7,7 @@ use parallel\Sync\Error;
 use WoohooLabs\Yang\JsonApi\Request\JsonApiRequestBuilder;
 use WoohooLabs\Yang\JsonApi\Client\JsonApiClient;
 use Http\Adapter\Guzzle6\Client;
+use WoohooLabs\Yang\JsonApi\Request\ResourceObject;
 
 class ApiClient
 {
@@ -123,7 +124,7 @@ class ApiClient
             if (is_array($decoded) && array_key_exists('id',$decoded['data'])) {
                 $id = "/" . $decoded['data']['id'] . "/";
             }
-        } elseif (is_a($body,"ResourceObject")) {
+        } elseif ($body instanceof ResourceObject) {
             $id = "/" . $body->id() . "/";
         }
 
