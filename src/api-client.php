@@ -70,7 +70,7 @@ class ApiClient
 
     public  function  updateCompany($data)
     {
-        return $this->sendAnyRequest("PATCH", "company", $data);
+        return $this->sendAnyRequest("PATCH", "companies", $data);
     }
 
     public  function createDeal($data)
