@@ -10,6 +10,8 @@ class SynergyCrmApiClientTest extends TestCase
 {
     protected static $client = '';
     protected static $createdContactId = 28214;
+    protected static $createdCompanyId = 718218;
+
     protected static $email = 'brekke.adrienne@gmail.com';
     protected static $faker = '';
 
@@ -38,7 +40,6 @@ class SynergyCrmApiClientTest extends TestCase
         $this->assertTrue(  $companies->document()->hasAnyPrimaryResources() );
         $this->assertIsArray(  $companies->document()->includedResources() );
     }
-
 
     public function testCanCreateContact()
     {
@@ -86,22 +87,6 @@ class SynergyCrmApiClientTest extends TestCase
         # $this->assertIsArray(  $companies->includedResources() );
     }
 
-    public function testCanGetContactsWithFilter()
-    {
-        echo "using email: ".self::$email.", id: ".self::$createdContactId."\n";
-        $response = self::$client->getContacts(array('email' => self::$email));
-        $document = $response->document()->primaryResources();
-        $this->assertIsArray(  $document );
-        $this->assertTrue( isset($document[0]) );
-
-        if ($response && $response->isSuccessful() && isset($document[0])) {
-            $customer = $document[0];
-            echo "got email:   ".$customer->attribute('email').", id: ".$customer->id()."\n";
-            $this->assertEquals(self::$email, $customer->attribute('email') );
-            $this->assertEquals(self::$createdContactId, $customer->id() );
-        }
-
-    }
 
     public  function  testCanCreateCompany()
     {
@@ -115,13 +100,14 @@ class SynergyCrmApiClientTest extends TestCase
 
         $result = self::$client->createCompany($companyObject);
 
+        self::$createdCompanyId = $result->document()->primaryResource()->id();
         $this->assertTrue($result->isSuccessful());
         $this->assertTrue($result->hasDocument());
     }
 
     public  function  testCanUpdateCompany()
     {
-        $companyObject = new ResourceObject("companies", '');
+        $companyObject = new ResourceObject("companies", self::$createdCompanyId);
         $companyObject->setAttributes(array(
             "name" => self::$faker->company()
         ));
@@ -134,6 +120,7 @@ class SynergyCrmApiClientTest extends TestCase
         $this->assertTrue($result->isSuccessful());
         $this->assertTrue($result->hasDocument());
     }
+
 
     public  function  testCanCreateDeal()
     {
@@ -151,6 +138,28 @@ class SynergyCrmApiClientTest extends TestCase
         $this->assertTrue(  $result->isSuccessful() );
     }
 
+    public function testCanGetContactsWithFilter()
+    {
+        echo "using email: ".self::$email.", id: ".self::$createdContactId."\n";
+        $response = self::$client->getContacts(array('email' => self::$email), ['companies','deals']);
+        $document = $response->document();
+        $primaryResources = $document->primaryResources();
+        $this->assertIsArray(  $primaryResources );
+        $this->assertTrue( isset($primaryResources[0]) );
+
+        if ($response && $response->isSuccessful() && isset($primaryResources[0])) {
+            $customer = $primaryResources[0];
+            echo "got email:   ".$customer->attribute('email').", id: ".$customer->id()."\n";
+            $this->assertEquals(self::$email, $customer->attribute('email') );
+            $this->assertEquals(self::$createdContactId, $customer->id() );
+        }
+        $included = $response->document()->includedResources();
+        $related_companies = array_filter($included, function ($r) { return $r->type() == "companies"; });
+
+        $this->assertIsArray($included);
+        $this->assertEquals(self::$createdCompanyId, $related_companies[0]->id());
+
+    }
 
     public  function testCanPost()
     {
