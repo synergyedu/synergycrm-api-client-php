@@ -111,10 +111,25 @@ class SynergyCrmApiClientTest extends TestCase
         ));
         $relation = new \WoohooLabs\Yang\JsonApi\Request\ToManyRelationship();
         $relation->addResourceIdentifier("contacts", self::$createdContactId);
-        $companyObject->setToManyRelationship("contacts",
-            $relation);
+        $companyObject->setToManyRelationship("contacts", $relation);
 
         $result = self::$client->createCompany($companyObject);
+
+        $this->assertTrue($result->isSuccessful());
+        $this->assertTrue($result->hasDocument());
+    }
+
+    public  function  testCanUpdateCompany()
+    {
+        $companyObject = new ResourceObject("companies", '');
+        $companyObject->setAttributes(array(
+            "name" => self::$faker->company()
+        ));
+        $relation = new \WoohooLabs\Yang\JsonApi\Request\ToManyRelationship();
+        $relation->addResourceIdentifier("contacts", self::$createdContactId);
+        $companyObject->setToManyRelationship("contacts", $relation);
+
+        $result = self::$client->updateCompany($companyObject);
 
         $this->assertTrue($result->isSuccessful());
         $this->assertTrue($result->hasDocument());

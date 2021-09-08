@@ -31,7 +31,7 @@ class ApiClient
         return 'Hello World, Composer!';
     }
 
-    public  function getRequest($method,$filter='')
+    public  function getRequest($method,$filter='',$includes='')
     {
         // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
         $requestBuilder = $this->buildRequest();
@@ -44,6 +44,8 @@ class ApiClient
             ->setHeader('Authorization', 'Bearer ' . $this->token);
 
         if ($filter != '') $requestBuilder->setJsonApiFilter($filter);
+        if ($includes != '') $requestBuilder->setJsonApiIncludes($includes);
+
         return $requestBuilder->getRequest();
     }
 
@@ -66,6 +68,11 @@ class ApiClient
         return $this->sendAnyRequest("PATCH", "contacts", $data);
     }
 
+    public  function  updateCompany($data)
+    {
+        return $this->sendAnyRequest("PATCH", "company", $data);
+    }
+
     public  function createDeal($data)
     {
         return $this->sendPostRequest("deals", $data);
@@ -76,17 +83,17 @@ class ApiClient
         return $this->sendPostRequest("companies", $data);
     }
 
-    public function getCompanies()
+    public function getCompanies($filter='',$includes='')
     {
-        $request = $this->getRequest("companies");
+        $request = $this->getRequest("companies",$filter,$includes);
         $response = $this->client->sendRequest($request);
         return $this->processedResponse($response);
     }
 
 
-    public function getContacts($filter='')
+    public function getContacts($filter='',$includes='')
     {
-        $request = $this->getRequest("contacts",$filter);
+        $request = $this->getRequest("contacts",$filter,$includes);
         $response = $this->client->sendRequest($request);
         return $this->processedResponse($response);
     }
