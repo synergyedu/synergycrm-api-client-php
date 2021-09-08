@@ -71,6 +71,11 @@ class ApiClient
         return $this->sendPostRequest("deals", $data);
     }
 
+    public  function createCompany($data)
+    {
+        return $this->sendPostRequest("companies", $data);
+    }
+
     public function getCompanies()
     {
         $request = $this->getRequest("companies");
@@ -124,7 +129,7 @@ class ApiClient
             if (is_array($decoded) && array_key_exists('id',$decoded['data'])) {
                 $id = "/" . $decoded['data']['id'] . "/";
             }
-        } elseif ($body instanceof ResourceObject) {
+        } elseif ($body instanceof ResourceObject && !empty($body->id())) {
             $id = "/" . $body->id() . "/";
         }
 

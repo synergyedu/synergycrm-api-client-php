@@ -9,8 +9,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 class SynergyCrmApiClientTest extends TestCase
 {
     protected static $client = '';
-    protected static $createdContactId = 0;
-    protected static $email = '';
+    protected static $createdContactId = 28214;
+    protected static $email = 'brekke.adrienne@gmail.com';
     protected static $faker = '';
 
     # protected  $faker = '';
@@ -22,7 +22,7 @@ class SynergyCrmApiClientTest extends TestCase
             'e4b9ec90ee3e2ff81240129265bc7cfd640bfc51268bc9d5a545af8dde937942');
         self::$faker = Faker\Factory::create();
 
-        self::$email = '123carmella.zemlak@morar.biz';
+       # self::$email = '123carmella.zemlak@morar.biz';
 
         #self::$email = uniqid().'@example.com';
         # self::$email = '123carmella.zemlak@morar.biz'; # self::$faker->email(); #  uniqid().'@example.com';
@@ -53,14 +53,12 @@ class SynergyCrmApiClientTest extends TestCase
         $contact = self::$client->createContact($contactObject);
         $this->assertTrue(  $contact->hasDocument() );
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
-        self::$createdContactId = $contact->document()->primaryResource()->id();
+        self::$createdContactId = (int)$contact->document()->primaryResource()->id();
         # $this->assertIsArray(  $companies->includedResources() );
     }
 
     public function testCanUpdateContact()
     {
-        self::$email = self::$faker->email; #  uniqid().'@example.com';
-        self::$createdContactId |= 28185;
         $firstName = "Updated" . self::$faker->firstName;
         if (true) {
             $ro = new ResourceObject("contacts", self::$createdContactId);
@@ -84,14 +82,13 @@ class SynergyCrmApiClientTest extends TestCase
 
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
         $this->assertEquals($firstName,
-            self::$createdContactId = $contact->document()->primaryResource()->attribute("first-name"));
+            $contact->document()->primaryResource()->attribute("first-name"));
         # $this->assertIsArray(  $companies->includedResources() );
     }
 
     public function testCanGetContactsWithFilter()
     {
-
-        echo "using email: ".self::$email;
+        echo "using email: ".self::$email.", id: ".self::$createdContactId."\n";
         $response = self::$client->getContacts(array('email' => self::$email));
         $document = $response->document()->primaryResources();
         $this->assertIsArray(  $document );
@@ -99,9 +96,28 @@ class SynergyCrmApiClientTest extends TestCase
 
         if ($response && $response->isSuccessful() && isset($document[0])) {
             $customer = $document[0];
+            echo "got email:   ".$customer->attribute('email').", id: ".$customer->id()."\n";
             $this->assertEquals(self::$email, $customer->attribute('email') );
+            $this->assertEquals(self::$createdContactId, $customer->id() );
         }
 
+    }
+
+    public  function  testCanCreateCompany()
+    {
+        $companyObject = new ResourceObject("companies", '');
+        $companyObject->setAttributes(array(
+            "name" => self::$faker->company()
+        ));
+        $relation = new \WoohooLabs\Yang\JsonApi\Request\ToManyRelationship();
+        $relation->addResourceIdentifier("contacts", self::$createdContactId);
+        $companyObject->setToManyRelationship("contacts",
+            $relation);
+
+        $result = self::$client->createCompany($companyObject);
+
+        $this->assertTrue($result->isSuccessful());
+        $this->assertTrue($result->hasDocument());
     }
 
     public  function  testCanCreateDeal()
@@ -115,9 +131,9 @@ class SynergyCrmApiClientTest extends TestCase
         $relation = new \WoohooLabs\Yang\JsonApi\Request\ToOneRelationship( "deal-stage-categories", 544  );
         $ro->setRelationship("stage-category", $relation );
 
-        $deal = self::$client->createDeal($ro);
-        $this->assertTrue(  $deal->hasDocument() );
-        $this->assertTrue(  $deal->isSuccessful() );
+        $result = self::$client->createDeal($ro);
+        $this->assertTrue(  $result->hasDocument() );
+        $this->assertTrue(  $result->isSuccessful() );
     }
 
 
