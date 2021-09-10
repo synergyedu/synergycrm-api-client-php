@@ -2,12 +2,10 @@
 namespace SynergyCrm;
 
 use GuzzleHttp\Psr7\Request;
-use mysql_xdevapi\Exception;
-use parallel\Sync\Error;
 use WoohooLabs\Yang\JsonApi\Request\JsonApiRequestBuilder;
-use WoohooLabs\Yang\JsonApi\Client\JsonApiClient;
 use Http\Adapter\Guzzle6\Client;
-use WoohooLabs\Yang\JsonApi\Request\ResourceObject;
+use WoohooLabs\Yang\JsonApi\JsonApiClient;
+
 
 class ApiClient
 {
@@ -126,7 +124,7 @@ class ApiClient
      * @param $body
      * @return \Psr\Http\Message\RequestInterface
      */
-    public function buildAnyRequest(string $http_method, $api_method, $body)
+    public function buildAnyRequest($http_method, $api_method, $body)
     {
         $requestBuilder = $this->buildRequest();
 
@@ -136,8 +134,9 @@ class ApiClient
             if (is_array($decoded) && array_key_exists('id',$decoded['data'])) {
                 $id = "/" . $decoded['data']['id'] . "/";
             }
-        } elseif ($body instanceof ResourceObject && !empty($body->id())) {
-            $id = "/" . $body->id() . "/";
+        } elseif (method_exists($body,"toArray")) {
+            $resource = $body->toArray();
+            if (!empty($resource["data"]["id"])) $id = "/" . $resource["data"]["id"] . "/";
         }
 
         // Setup the request with general properties

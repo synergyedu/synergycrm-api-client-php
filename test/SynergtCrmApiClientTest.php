@@ -3,7 +3,6 @@
 use PHPUnit\Framework\TestCase;
 use SynergyCrm\ApiClient;
 use WoohooLabs\Yang\JsonApi\Request\ResourceObject;
-use WoohooLabs\Yang\JsonApi\Request\RelationshipInterface;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 class SynergyCrmApiClientTest extends TestCase
@@ -17,7 +16,7 @@ class SynergyCrmApiClientTest extends TestCase
 
     # protected  $faker = '';
 
-    public static function setUpBeforeClass(): void
+    public static function setUpBeforeClass()
     {
         self::$client = new ApiClient(
             'http://localhost:3000/api/v1/',
@@ -38,7 +37,7 @@ class SynergyCrmApiClientTest extends TestCase
         # var_dump( $companies );
         $this->assertTrue(  $companies->hasDocument() );
         $this->assertTrue(  $companies->document()->hasAnyPrimaryResources() );
-        $this->assertIsArray(  $companies->document()->includedResources() );
+        $this->assertTrue(  is_array( $companies->document()->includedResources() ));
     }
 
     public function testCanCreateContact()
@@ -80,7 +79,7 @@ class SynergyCrmApiClientTest extends TestCase
         }
         $contact = self::$client->updateContact($ro);
         $this->assertTrue(  $contact->isSuccessful() );
-
+        $this->assertTrue(  $contact->hasDocument() );
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
         $this->assertEquals($firstName,
             $contact->document()->primaryResource()->attribute("first-name"));
@@ -144,7 +143,7 @@ class SynergyCrmApiClientTest extends TestCase
         $response = self::$client->getContacts(array('email' => self::$email), ['companies','deals']);
         $document = $response->document();
         $primaryResources = $document->primaryResources();
-        $this->assertIsArray(  $primaryResources );
+        $this->assertTrue(  is_array(  $primaryResources ));
         $this->assertTrue( isset($primaryResources[0]) );
 
         if ($response && $response->isSuccessful() && isset($primaryResources[0])) {
@@ -156,7 +155,7 @@ class SynergyCrmApiClientTest extends TestCase
         $included = $response->document()->includedResources();
         $related_companies = array_filter($included, function ($r) { return $r->type() == "companies"; });
 
-        $this->assertIsArray($included);
+        $this->assertTrue(  is_array($included));
         $this->assertEquals(self::$createdCompanyId, $related_companies[0]->id());
 
     }

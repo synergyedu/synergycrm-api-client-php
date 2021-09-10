@@ -10,7 +10,8 @@
     "require": {
         "fzaninotto/faker": "^1.9",
         "php-http/guzzle6-adapter": "^1.1",
-        "woohoolabs/yang": "^0.9.0"
+        "woohoolabs/yang": "^0.9.0",
+        "ext-json": "*"
     },
     "autoload": {
         "classmap": [
