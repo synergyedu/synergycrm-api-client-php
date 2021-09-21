@@ -12,7 +12,7 @@ class ApiClient
     public $token = '';
     public $url = '';
     public $client = null;
-    function __construct($url="http://localhost:3000/api/v1/",$token='') {
+    function __construct($url,$token) {
         $this->url = $url;
         $this->token = $token;
         // Instantiate the Guzzle HTTP Client
@@ -22,11 +22,6 @@ class ApiClient
         $this->client = new JsonApiClient($guzzleClient);
 
 
-    }
-
-    public static function world()
-    {
-        return 'Hello World, Composer!';
     }
 
     public  function getRequest($method,$filter='',$includes='')
@@ -110,7 +105,7 @@ class ApiClient
      */
     public function buildRequest($method='GET')
     {
-// Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
+        // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
         $request = new Request($method, '');
 
         // Instantiate the request builder

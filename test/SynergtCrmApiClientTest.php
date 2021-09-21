@@ -8,13 +8,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 class SynergyCrmApiClientTest extends TestCase
 {
     protected static $client = '';
-    protected static $createdContactId = 28214;
-    protected static $createdCompanyId = 718218;
-
-    protected static $email = 'brekke.adrienne@gmail.com';
     protected static $faker = '';
 
-    # protected  $faker = '';
+    # данные из одного из предыдущих прогонов, чтобы тесты работали по одному
+    protected static $createdContactId = 28214; 
+    protected static $createdCompanyId = 718206; 
+    protected static $email = 'brekke.adrienne@gmail.com';
+
 
     public static function setUpBeforeClass()
     {
@@ -22,19 +22,11 @@ class SynergyCrmApiClientTest extends TestCase
             'http://localhost:3000/api/v1/',
             'e4b9ec90ee3e2ff81240129265bc7cfd640bfc51268bc9d5a545af8dde937942');
         self::$faker = Faker\Factory::create();
-
-       # self::$email = '123carmella.zemlak@morar.biz';
-
-        #self::$email = uniqid().'@example.com';
-        # self::$email = '123carmella.zemlak@morar.biz'; # self::$faker->email(); #  uniqid().'@example.com';
-
-        # $this->assertInstanceOf( ApiClient::class, self::$client );
     }
 
     public function testCanGetCompanies()
     {
         $companies = self::$client->getCompanies();
-        # var_dump( $companies );
         $this->assertTrue(  $companies->hasDocument() );
         $this->assertTrue(  $companies->document()->hasAnyPrimaryResources() );
         $this->assertTrue(  is_array( $companies->document()->includedResources() ));
@@ -54,7 +46,6 @@ class SynergyCrmApiClientTest extends TestCase
         $this->assertTrue(  $contact->hasDocument() );
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
         self::$createdContactId = (int)$contact->document()->primaryResource()->id();
-        # $this->assertIsArray(  $companies->includedResources() );
     }
 
     public function testCanUpdateContact()
@@ -83,7 +74,6 @@ class SynergyCrmApiClientTest extends TestCase
         $this->assertTrue(  $contact->document()->hasAnyPrimaryResources() );
         $this->assertEquals($firstName,
             $contact->document()->primaryResource()->attribute("first-name"));
-        # $this->assertIsArray(  $companies->includedResources() );
     }
 
 
