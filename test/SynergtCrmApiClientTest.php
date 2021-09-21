@@ -11,8 +11,8 @@ class SynergyCrmApiClientTest extends TestCase
     protected static $faker = '';
 
     # данные из одного из предыдущих прогонов, чтобы тесты работали по одному
-    protected static $createdContactId = 28214; 
-    protected static $createdCompanyId = 718206; 
+    protected static $createdContactId = 28288;
+    protected static $createdCompanyId = 718288;
     protected static $email = 'brekke.adrienne@gmail.com';
 
 
@@ -89,7 +89,7 @@ class SynergyCrmApiClientTest extends TestCase
 
         $result = self::$client->createCompany($companyObject);
 
-        self::$createdCompanyId = $result->document()->primaryResource()->id();
+        self::$createdCompanyId = (int)$result->document()->primaryResource()->id();
         $this->assertTrue($result->isSuccessful());
         $this->assertTrue($result->hasDocument());
     }
@@ -150,9 +150,10 @@ class SynergyCrmApiClientTest extends TestCase
 
     }
 
+    private  static  $deal;
     public  function testCanPost()
     {
-        $deal = self::$client->sendPostRequest("deals", '{
+        $result = self::$client->sendPostRequest("deals", '{
   "data": {
     "type": "deals",
     "attributes": {
@@ -169,7 +170,38 @@ class SynergyCrmApiClientTest extends TestCase
     }
   }
 }');
-        $this->assertTrue(  $deal->isSuccessful() );
+        $this->assertTrue(  $result->isSuccessful() );
+        self::$deal = $result->document()->primaryResource();
     }
+
+    public  function testCanDeleteContactById() {
+        echo "delete contact ".self::$createdContactId . "\n";
+        $result = self::$client->sendDeleteRequest("contacts", self::$createdContactId);
+        $this->assertTrue( $result->isSuccessful());
+    }
+
+    public  function testCanDeleteDealByObject() {
+
+        $dealId = self::$deal->id();
+        echo "delete deal ".$dealId . "\n";
+        $result = self::$client->sendDeleteRequest("deals", $dealId);
+        $this->assertTrue( $result->isSuccessful());
+
+        $recheck = self::$client->sendGetRequest("deals", $dealId);
+
+        $this->assertFalse( $recheck->isSuccessful());
+        # $this->assertEquals( "Not Found", $result->getReasonPhrase());
+    }
+
+    public  function testCanDeleteCompanyById() {
+        echo "delete company ".self::$createdCompanyId . "\n";
+        $result = self::$client->sendDeleteRequest("companies", self::$createdCompanyId);
+        $this->assertEquals( "No Content", $result->getReasonPhrase());
+        $this->assertTrue(  $result->isSuccessful());
+        $recheck = self::$client->sendGetRequest("companies", self::$createdCompanyId);
+        $this->assertFalse( $recheck->isSuccessful());
+    }
+
+
 }
 

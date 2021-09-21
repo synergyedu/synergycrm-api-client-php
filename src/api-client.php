@@ -24,26 +24,24 @@ class ApiClient
 
     }
 
-    public  function getRequest($method,$filter='',$includes='')
-    {
-        // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
-        $requestBuilder = $this->buildRequest();
 
-        // Setup the request with general properties
-        $requestBuilder
-            ->setMethod("GET")
-            ->setUri($this->url.$method)
-            ->setHeader("Content-Type", "application/vnd.api+json")
-            ->setHeader('Authorization', 'Bearer ' . $this->token);
-
-        if ($filter != '') $requestBuilder->setJsonApiFilter($filter);
-        if ($includes != '') $requestBuilder->setJsonApiIncludes($includes);
-
-        return $requestBuilder->getRequest();
+    public function sendGetRequest($api_method, $id = '', $filter='',$includes='') {
+        $query = $api_method . $this->extractId($id);
+        $request = $this->getRequest($query,$filter,$includes);
+        $response = $this->client->sendRequest($request);
+        return $this->processedResponse($response);
     }
 
     public  function sendPostRequest($api_method, $body = '') {
         return $this->sendAnyRequest("POST", $api_method, $body);
+    }
+
+    public  function sendDeleteRequest($api_method, $body = '') {
+        return $this->sendAnyRequest("DELETE", $api_method, $body);
+    }
+
+    public  function sendPatchRequest($api_method, $body = '') {
+        return $this->sendAnyRequest("PATCH", $api_method, $body);
     }
 
     public  function buildPostRequest($api_method, $body = '')
@@ -78,17 +76,12 @@ class ApiClient
 
     public function getCompanies($filter='',$includes='')
     {
-        $request = $this->getRequest("companies",$filter,$includes);
-        $response = $this->client->sendRequest($request);
-        return $this->processedResponse($response);
+        return $this->sendGetRequest("companies", '', $filter, $includes);
     }
-
 
     public function getContacts($filter='',$includes='')
     {
-        $request = $this->getRequest("contacts",$filter,$includes);
-        $response = $this->client->sendRequest($request);
-        return $this->processedResponse($response);
+        return $this->sendGetRequest("contacts", '', $filter, $includes);
     }
 
     /**
@@ -123,25 +116,15 @@ class ApiClient
     {
         $requestBuilder = $this->buildRequest();
 
-        $id = '';
-        if (is_string($body)) {
-            $decoded = json_decode($body,true);
-            if (is_array($decoded) && array_key_exists('id',$decoded['data'])) {
-                $id = "/" . $decoded['data']['id'] . "/";
-            }
-        } elseif (method_exists($body,"toArray")) {
-            $resource = $body->toArray();
-            if (!empty($resource["data"]["id"])) $id = "/" . $resource["data"]["id"] . "/";
-        }
+        $id = $this->extractId($body);
 
         // Setup the request with general properties
         $requestBuilder
             ->setMethod($http_method)
             ->setUri($this->url . $api_method . $id)
-            ->setHeader('Authorization', 'Bearer ' . $this->token)
-            ->setJsonApiBody( // string, array or as a ResourceObject instance
-                $body
-            );
+            ->setHeader('Authorization', 'Bearer ' . $this->token);
+
+        if ($http_method != "DELETE") $requestBuilder->setJsonApiBody($body);
 
         return $requestBuilder->getRequest();
     }
@@ -158,4 +141,49 @@ class ApiClient
         $response = $this->client->sendRequest($request);
         return $this->processedResponse($response);
     }
+
+    public  function getRequest($method,$filter='',$includes='')
+    {
+        // Instantiate an empty PSR-7 request, note that the default HTTP method must be provided
+        $requestBuilder = $this->buildRequest();
+
+        // Setup the request with general properties
+        $requestBuilder
+            ->setMethod("GET")
+            ->setUri($this->url.$method)
+            ->setHeader("Content-Type", "application/vnd.api+json")
+            ->setHeader('Authorization', 'Bearer ' . $this->token);
+
+        if ($filter != '') $requestBuilder->setJsonApiFilter($filter);
+        if ($includes != '') $requestBuilder->setJsonApiIncludes($includes);
+
+        return $requestBuilder->getRequest();
+    }
+
+    /**
+     * @param $body
+     * @return string
+     */
+    public function extractId($body)
+    {
+        $id = '';
+        if (is_numeric($body)) {
+            $id = sprintf("/%d/", (int)$body);
+        } else if (is_string($body)) {
+            try {
+                $decoded = json_decode($body, true);
+                if (is_array($decoded) && array_key_exists('id', $decoded['data'])) {
+                    $id = "/" . $decoded['data']['id'];
+                }
+            } catch (\Exception $e) {
+            }
+        } elseif (method_exists($body, "toArray")) {
+            $resource = $body->toArray();
+            if (!empty($resource["data"]["id"])) $id = "/" . $resource["data"]["id"];
+        } elseif (method_exists($body, "id")) {
+            $id = "/" . $body->id();
+        }
+        return $id;
+    }
+
 }
